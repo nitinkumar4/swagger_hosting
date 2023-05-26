@@ -15,48 +15,21 @@ tags:
   - name: Info
     description: General information of Gateway Download Manager
 
-security:
-  - bearerAuth: []
-
 paths:
   /status:
     get:
-      # operationId: GetVersion
       tags:
         - Info
       summary: Get Status
-      description: Status of Gateway Download Manager
+      description: Status of Gateway Download Manager API Service
       responses:
         '200':
           description: Status of Gateway Download Manager api service
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Version'
-        '400':
-          description: "Missing headers to get API version"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BadRequestError'
-        '401':
-          description: "Unauthorized to get API version"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedError'
-        '403':
-          description: "Forbidden to get API version"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ForbiddenError'
-        '500':
-          description: "Failed to get API version"
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InternalServerError'
+                $ref: '#/components/schemas/Status'
+
   /check-artifact:
     post:
       tags:
@@ -67,11 +40,11 @@ paths:
         $ref: '#components/parameter/ArtifactName'
       responses:
         '200':
-          description: "artifact puhsed"
+          description: "Presence of artifact in artifactories."
           content:
             application/json:
               type: object
-              description: "200 response"
+              description: "Response from api-service for checking if an artifact is pushed successfully."
               properties:
                 Artifact: 
                   type: string
@@ -79,27 +52,124 @@ paths:
                 Exists:
                   type: bool
                   example: "true"
-        '500':
-          description: "st 500"
+        '400':
+          description: "ArtifactName parameter missing from the request."
           content:
-          # contnogflanlafnlanf
-    
+            application/json:
+              $ref: '#/components/schemas/BadRequestError'
+        '500':
+          description: "Internal Server Error - Failed to check for artifact"
+          content:
+            application/json:
+              $ref: '#/components/schemas/InternalServerError'
+
     /push-artifacts:
       post:
         tags:
           - Info
         summary: "Push Artifact"
-        description: "some description"
+        description: "Queue the Download manager to pull a list of artifacts from S3 bucket and push to respective artifactories(harbor/pulp ) "
         parameters:
-          $ref: "#/parameters/PushArtifacts"
+          $ref: "#/components/parameter/PushArtifacts"
         responses:
-          '201':
-            
-
+          '200':
+            description: "Successfully triggered download-manager to push artifacts."
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Status'
+          '400':
+            description: "Improper request body."
+            content:
+              application/json:
+                $ref: '#/components/schemas/BadRequestError'
+          '401':
+            description: "Incorrect S3 credentials."
+            content:
+              application/json:
+                $ref: '#/components/schemas/UnauthorizedError'
+          '500':
+            description: "Internal Server Error - Failed to queue artifacts in download-manager"
+            content:
+              application/json:
+                $ref: '#/components/schemas/InternalServerError'
 
 
 components:
   schemas:
+    Status:
+      type: object
+      description: Service Status
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: OK
+
+    BadRequestError:
+      type: object
+      description: Bad Request Error
+      required:
+        - code
+        - msg
+        - error
+      properties:
+        code:
+          type: integer
+          example: 400
+          description: HTTP Status Code
+        msg:
+          type: string
+          example: Header X-Tenant-Id is required but missing
+          description: Bad Request
+        error:
+          type: string
+          example: Bad Request
+          description: Bad Request
+
+    UnauthorizedError:
+      type: object
+      description: Unauthorized Error
+      required:
+        - code
+        - msg
+        - error
+      properties:
+        code:
+          type: integer
+          example: 401
+          description: HTTP Status Code
+        msg:
+          type: string
+          example: User Unauthorized to perform above action
+          description: Unauthorized
+        error:
+          type: string
+          example: Unauthorized
+          description: Unauthorized
+
+    InternalServerError:
+      type: object
+      description: Internal Server Error
+      required:
+        - code
+        - msg
+        - error
+      properties:
+        code:
+          type: integer
+          example: 500
+          description: HTTP Status Code
+        msg:
+          type: string
+          example: Database connection error occurred
+          description: Internal Server Error
+        error:
+          type: string
+          example: Internal Server Error
+          description: Internal Server Error
+
     CheckArtifactResponse:
       type: object
       description: "schema for check artifact response"
@@ -135,10 +205,6 @@ components:
             type: string
 
       required: [S3Creds, ArtifactList]
-
-    
-
-
 
   parameter:
     ArtifactName: 
