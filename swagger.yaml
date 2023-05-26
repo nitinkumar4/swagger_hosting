@@ -1,4 +1,4 @@
-# (C) Copyright 2022-23 Hewlett Packard Enterprise Development LP
+# (C) Copyright 2023 Hewlett Packard Enterprise Development LP
 
 openapi: 3.0.0
 info:
@@ -29,7 +29,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Status'
-
   /check-artifact:
     post:
       tags:
@@ -37,61 +36,59 @@ paths:
       summary: Check Artifact
       description: Check if an artifact has been pushed
       parameters:
-        $ref: '#/components/parameter/ArtifactName'
+        - $ref: '#/components/parameters/ArtifactName'
       responses:
         '200':
           description: "Presence of artifact in artifactories."
           content:
             application/json:
-              type: object
-              description: "Response from api-service for checking if an artifact is pushed successfully."
-              properties:
-                Artifact: 
-                  type: string
-                  example: morpheus-appliance-5.4.10-2.zip
-                Exists:
-                  type: bool
-                  example: "true"
+              schema:
+                $ref: '#/components/schemas/CheckArtifact'
+              
         '400':
           description: "ArtifactName parameter missing from the request."
           content:
             application/json:
-              $ref: '#/components/schemas/BadRequestError'
+              schema:
+                $ref: '#/components/schemas/BadRequestError'
         '500':
           description: "Internal Server Error - Failed to check for artifact"
           content:
             application/json:
-              $ref: '#/components/schemas/InternalServerError'
-
-    /push-artifacts:
-      post:
-        tags:
-          - Info
-        summary: "Push Artifact"
-        description: "Queue the Download manager to pull a list of artifacts from S3 bucket and push to respective artifactories(harbor/pulp ) "
-        parameters:
-          $ref: '#/components/parameter/PushArtifacts'
-        responses:
-          '200':
-            description: "Successfully triggered download-manager to push artifacts."
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Status'
-          '400':
-            description: "Improper request body."
-            content:
-              application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError'
+  /push-artifacts:
+    post:
+      tags:
+        - Info
+      summary: "Push Artifact"
+      description: "Queue the Download manager to pull a list of artifacts from S3 bucket and push to respective artifactories(harbor/pulp ) "
+      parameters:
+        - $ref: '#/components/parameters/PushArtifacts'
+      responses:
+        '200':
+          description: "Successfully triggered download-manager to push artifacts."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Status'
+        '400':
+          description: "Improper request body."
+          content:
+            application/json:
+              schema:
                 $ref: '#/components/schemas/BadRequestError'
-          '401':
-            description: "Incorrect S3 credentials."
-            content:
-              application/json:
+        '401':
+          description: "Incorrect S3 credentials."
+          content:
+            application/json:
+              schema:
                 $ref: '#/components/schemas/UnauthorizedError'
-          '500':
-            description: "Internal Server Error - Failed to queue artifacts in download-manager"
-            content:
-              application/json:
+        '500':
+          description: Internal Server Error - Failed to queue artifacts in download-manager
+          content:
+            application/json:
+              schema:
                 $ref: '#/components/schemas/InternalServerError'
 
 
@@ -105,7 +102,17 @@ components:
       properties:
         status:
           type: string
-          example: OK
+          example: success
+    CheckArtifact:
+      type: object
+      description: "Response from api-service for checking if an artifact is pushed successfully."
+      properties:
+        Artifact: 
+          type: string
+          example: morpheus-appliance-5.4.10-2.zip
+        Exists:
+          type: boolean
+          example: "true"
 
     BadRequestError:
       type: object
@@ -121,7 +128,7 @@ components:
           description: HTTP Status Code
         msg:
           type: string
-          example: Header X-Tenant-Id is required but missing
+          example:  A required parameter is missing from rrequest header.
           description: Bad Request
         error:
           type: string
@@ -163,20 +170,12 @@ components:
           description: HTTP Status Code
         msg:
           type: string
-          example: Database connection error occurred
+          example: Failure during handling of request
           description: Internal Server Error
         error:
           type: string
           example: Internal Server Error
           description: Internal Server Error
-
-    CheckArtifactResponse:
-      type: object
-      description: "schema for check artifact response"
-      properties:
-        artifact-name : 
-          type: string
-          example: morpheus-appliance-5.4.10-2.zip
 
     S3Creds:
       type: object
@@ -184,20 +183,19 @@ components:
       properties:
         AWS_ACCESS_KEY_ID:
           type: string
-          example: "fjajlfjlajfa"
+          example: "AK12AZXJR2MUTEVHI"
         AWS_SECRET_ACCESS_KEY:
           type: string
-          example: "jflajfjodifdf"
+          example: "qmPvwfjs4714tqBfjs47JqmPvw14tqBJ4714tq"
         AWS_DEFAULT_REGION:
           type: string
           example: "us-west-2"
 
     PushArtifactParam:
       type: object
-      description: ""
+      description: "schema for push artifact parameters"
       properties:
         S3Creds:
-          type: object
           $ref: '#/components/schemas/S3Creds'
         ArtifactList:
           type: array
@@ -205,19 +203,28 @@ components:
             type: string
 
       required: [S3Creds, ArtifactList]
+    
+    CheckArtifactParam:
+      type: object
+      description: "schema for check artifact parameters"
+      properties:
+        Name:
+          type: string
+          example: morpheus-appliance-5.4.10-2.zip
+      required: [ArtifactName]
+          
 
-  parameter:
-    ArtifactName: 
-      name: ArtifactName
-      in: body
-      required: true
-      type: string
+  parameters:
     PushArtifacts:
       name: PushArtifacts
-      in: body
-      requied: true
+      in: header
       schema:
         $ref: '#/components/schemas/PushArtifactParam'
+    ArtifactName: 
+      name: ArtifactName
+      in: header
+      schema:
+        $ref: '#/components/schemas/CheckArtifactParam'
       
 
 
