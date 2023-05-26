@@ -11,37 +11,24 @@ info:
 servers:
   - url: https://localhost:8188/
     description: local
-  - url: https://gateway-api.ops.hpedevops.net/
-    description: development
-  - url: https://gateway-api.private.greenlake.hpe-gl-intg.com/
-    description: integration
-  - url: https://gateway-api.privatecloud.greenlake.hpe.com/
-    description: production
 tags:
   - name: Info
-    description: General information of Gateway Service
-  - name: Deployment
-    description: Deployment defines a Gateway Deployment for a Tenant
-  - name: OSB
-    description: Gateway OSB APIs
+    description: General information of Gateway Download Manager
 
 security:
   - bearerAuth: []
 
 paths:
-  /v2/version:
+  /status:
     get:
-      operationId: GetVersion
+      # operationId: GetVersion
       tags:
         - Info
-      summary: Get Version
-      description: Version of Gateway Service
-      parameters:
-        - $ref: '#/components/parameters/Authorization'
-        - $ref: '#/components/parameters/BrokerAPIVersion'
+      summary: Get Status
+      description: Status of Gateway Download Manager
       responses:
         '200':
-          description: Version and Build number
+          description: Status of Gateway Download Manager api service
           content:
             application/json:
               schema:
@@ -70,3 +57,99 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/InternalServerError'
+  /check-artifact:
+    post:
+      tags:
+        - Info
+      summary: Check Artifact
+      description: Check if an artifact has been pushed
+      parameters:
+        $ref: '#components/parameter/ArtifactName'
+      responses:
+        '200':
+          description: "artifact puhsed"
+          content:
+            application/json:
+              type: object
+              description: "200 response"
+              properties:
+                Artifact: 
+                  type: string
+                  example: morpheus-appliance-5.4.10-2.zip
+                Exists:
+                  type: bool
+                  example: "true"
+        '500':
+          description: "st 500"
+          content:
+          # contnogflanlafnlanf
+    
+    /push-artifacts:
+      post:
+        tags:
+          - Info
+        summary: "Push Artifact"
+        description: "some description"
+        parameters:
+          $ref: "#/parameters/PushArtifacts"
+        responses:
+          '201':
+            
+
+
+
+components:
+  schemas:
+    CheckArtifactResponse:
+      type: object
+      description: "schema for check artifact response"
+      properties:
+        artifact-name : 
+          type: string
+          example: morpheus-appliance-5.4.10-2.zip
+
+    S3Creds:
+      type: object
+      description: "S3 keys required for operation"
+      properties:
+        AWS_ACCESS_KEY_ID:
+          type: string
+          example: "fjajlfjlajfa"
+        AWS_SECRET_ACCESS_KEY:
+          type: string
+          example: "jflajfjodifdf"
+        AWS_DEFAULT_REGION:
+          type: string
+          example: "us-west-2"
+
+    PushArtifactParam:
+      type: object
+      description: ""
+      properties:
+        S3Creds:
+          type: object
+          $ref: "#/components/S3Creds"
+        ArtifactList:
+          type: array
+          items: 
+            type: string
+
+      required: [S3Creds, ArtifactList]
+
+    
+
+
+
+  parameter:
+    ArtifactName: 
+      name: ArtifactName
+      in: body
+      required: true
+      type: string
+    PushArtifacts:
+      name: PushArtifacts
+      in: body
+      requied: true
+      schema:
+        $ref: "#/components/schemas/PushArtifactParam"
+      
