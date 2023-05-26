@@ -37,7 +37,7 @@ paths:
       summary: Check Artifact
       description: Check if an artifact has been pushed
       parameters:
-        $ref: '#components/parameter/ArtifactName'
+        $ref: '#/components/parameter/ArtifactName'
       responses:
         '200':
           description: "Presence of artifact in artifactories."
@@ -70,7 +70,7 @@ paths:
         summary: "Push Artifact"
         description: "Queue the Download manager to pull a list of artifacts from S3 bucket and push to respective artifactories(harbor/pulp ) "
         parameters:
-          $ref: "#/components/parameter/PushArtifacts"
+          $ref: '#/components/parameter/PushArtifacts'
         responses:
           '200':
             description: "Successfully triggered download-manager to push artifacts."
@@ -198,7 +198,7 @@ components:
       properties:
         S3Creds:
           type: object
-          $ref: "#/components/S3Creds"
+          $ref: '#/components/schemas/S3Creds'
         ArtifactList:
           type: array
           items: 
@@ -217,5 +217,8 @@ components:
       in: body
       requied: true
       schema:
-        $ref: "#/components/schemas/PushArtifactParam"
+        $ref: '#/components/schemas/PushArtifactParam'
       
+
+
+
