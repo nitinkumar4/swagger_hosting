@@ -226,6 +226,3 @@ components:
       schema:
         $ref: '#/components/schemas/CheckArtifactParam'
       
-
-
-
